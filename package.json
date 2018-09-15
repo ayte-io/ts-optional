@@ -1,16 +1,51 @@
 {
   "name": "@ayte/optional",
   "version": "0.1.0",
-  "main": "dist/index.js",
+  "main": "build/distribution/index.js",
   "repository": "git@github.com:ayte-io/ts-optional.git",
   "license": "MIT",
   "private": false,
-  "types": "dist/index.d.ts",
+  "files": [
+    "build/distribution/**/*"
+  ],
   "scripts": {
-    "compile": "tsc"
+    "clean": "rm -rf build",
+    "compile": "tsc",
+    "lint": "tslint --project .",
+    "test": "jest && mv allure-results build/metadata/allure",
+    "coverage:publish": "cat build/metadata/coverage/lcov.info | coveralls"
   },
   "devDependencies": {
+    "@types/jest": "^23.3.2",
+    "allure-commandline": "^2.7.0",
+    "coveralls": "^3.0.2",
+    "jest": "^23.6.0",
+    "jest-allure": "^0.1.1",
+    "jest-junit": "^5.1.0",
+    "ts-jest": "^23.1.4",
     "tslint": "^5.11.0",
     "typescript": "^3.0.3"
+  },
+  "types": "dist/index.d.ts",
+  "jest": {
+    "testRegex": "/tests/.+\\.spec\\.ts",
+    "transform": {
+      "\\.ts$": "ts-jest"
+    },
+    "moduleFileExtensions": [
+      "ts",
+      "js",
+      "json"
+    ],
+    "collectCoverage": true,
+    "coverageDirectory": "build/metadata/coverage",
+    "reporters": [
+      "default",
+      "jest-junit",
+      "jest-allure"
+    ]
+  },
+  "jest-junit": {
+    "output": "build/report/junit/junit.xml"
   }
 }
