@@ -1,0 +1,16 @@
+{
+  "name": "@ayte/optional",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "repository": "git@github.com:ayte-io/ts-optional.git",
+  "license": "MIT",
+  "private": false,
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "compile": "tsc"
+  },
+  "devDependencies": {
+    "tslint": "^5.11.0",
+    "typescript": "^3.0.3"
+  }
+}
