@@ -1,8 +1,10 @@
 {
   "name": "@ayte/optional",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "build/distribution/index.js",
   "repository": "git@github.com:ayte-io/ts-optional.git",
+  "keywords": ["optional"],
+  "homepage": "https://github.com/ayte-io/ts-optional#readme",
   "license": "MIT",
   "private": false,
   "files": [
