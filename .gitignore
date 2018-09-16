@@ -2,6 +2,7 @@
 .idea
 
 # Artifacts
-dist
+build
 node_modules
 yarn.lock
+*.log

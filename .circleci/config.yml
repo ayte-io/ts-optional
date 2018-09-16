@@ -1,0 +1,67 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10
+    working_directory: /tmp/workspace
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
+      - run: yarn install
+      - save_cache:
+          key: v1-dependencies-{{ checksum "package.json" }}
+          paths:
+            - node_modules
+      - run: yarn compile
+      - run: yarn lint
+      - run: yarn test
+      - run: 'yarn coverage:publish'
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - build
+            - node_modules/allure-commandline
+      - store_artifacts:
+          path: build/metadata/coverage/lcov-report
+          destination: Coverage
+      - store_test_results:
+          path: build/report/junit
+  report:
+    docker:
+      - image: circleci/openjdk:10
+    working_directory: /tmp/workspace
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run: node_modules/allure-commandline/dist/bin/allure generate -c -o build/report/allure -- build/metadata/allure
+      - store_artifacts:
+          path: build/report/allure
+          destination: Allure
+  publish:
+    docker:
+      - image: circleci/node:10
+    working_directory: /tmp/workspace
+    steps:
+      - attach_workspace
+      - run: yarn publish
+workflows:
+  version: 2
+  default:
+    jobs:
+      - build
+      - report:
+          requires:
+            - build
+      - publish:
+          requires:
+            - report
+          context: npmjs.org
+          filters:
+            tags:
+              only: /^\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+
