@@ -1,8 +1,8 @@
 # @ayte/optional
 
-[![npm](https://img.shields.io/npm/v/ayte/optional.svg?style=flat-square)](https://www.npmjs.com/package/@ayte/optional)
+[![npm](https://img.shields.io/npm/v/@ayte/optional.svg?style=flat-square)](https://www.npmjs.com/package/@ayte/optional)
 [![CircleCI/Master](https://img.shields.io/circleci/project/github/ayte-io/ts-optional/master.svg?style=flat-square)](https://circleci.com/gh/ayte-io/ts-optional/tree/master)
-[![Coveralls/Master](https://img.shields.io/coveralls/github/ayte/ts-optional/master.svg?style=flat-square)](https://coveralls.io/github/ayte-io/ts-optional?branch=master)
+[![Coveralls/Master](https://img.shields.io/coveralls/github/ayte-io/ts-optional/master.svg?style=flat-square)](https://coveralls.io/github/ayte-io/ts-optional?branch=master)
 
 ## Installation
 
@@ -115,7 +115,7 @@ Send your PRs to **dev** branch.
 ## Dev branch state
 
 [![CircleCI/Dev](https://img.shields.io/circleci/project/github/ayte-io/ts-optional/dev.svg?style=flat-square)](https://circleci.com/gh/ayte-io/ts-optional/tree/dev)
-[![Coveralls/Dev](https://img.shields.io/coveralls/github/ayte/ts-optional/dev.svg?style=flat-square)](https://coveralls.io/github/ayte-io/ts-optional?branch=dev)
+[![Coveralls/Dev](https://img.shields.io/coveralls/github/ayte-io/ts-optional/dev.svg?style=flat-square)](https://coveralls.io/github/ayte-io/ts-optional?branch=dev)
 
 ## Licensing
 
