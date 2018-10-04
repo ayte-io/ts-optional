@@ -28,7 +28,7 @@
     "tslint": "^5.11.0",
     "typescript": "^3.0.3"
   },
-  "types": "dist/index.d.ts",
+  "types": "build/distribution/index.d.ts",
   "jest": {
     "testRegex": "/tests/.+\\.spec\\.ts",
     "transform": {
