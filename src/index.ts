@@ -1,5 +1,5 @@
 export interface IOptional<T> {
-    map<V>(transformer: (identity: T) => V): IOptional<V>;
+    map<V>(transformer: (identity: T) => V | null | undefined): IOptional<V>;
     flatMap<V>(transformer: (identity: T) => IOptional<V>): IOptional<V>;
     filter(predicate: (identity: T) => boolean): IOptional<T>;
     get(): T | never;
@@ -21,11 +21,15 @@ export interface IOptional<T> {
 export class Optional<T> implements IOptional<T> {
     private static EMPTY = new Optional<any>(null);
 
-    private constructor(private readonly identity: T | null) {}
+    private constructor(private readonly identity: T | null | undefined) {}
 
-    public map<V>(transformer: (identity: T) => V): IOptional<V> {
+    public map<V>(transformer: (identity: T) => V | null | undefined): IOptional<V> {
         Optional.ensure(transformer);
-        return this.isPresent() ? new Optional(transformer(this.identity as T)) : Optional.empty();
+        if (!this.isPresent()) {
+            return Optional.empty();
+        }
+        const value = transformer(this.identity as T);
+        return Optional.exists(value) ? new Optional(value) : Optional.empty();
     }
 
     public flatMap<V>(transformer: (identity: T) => IOptional<V>): IOptional<V> {
