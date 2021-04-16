@@ -2,17 +2,17 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:10
+      - image: circleci/node:15
     working_directory: /tmp/workspace
     steps:
       - checkout
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "package.json" }}
-            - v1-dependencies-
+            - v2-dependencies-{{ checksum "package.json" }}
+            - v2-dependencies-
       - run: yarn install
       - save_cache:
-          key: v1-dependencies-{{ checksum "package.json" }}
+          key: v2-dependencies-{{ checksum "package.json" }}
           paths:
             - node_modules
       - run: yarn compile
@@ -31,7 +31,7 @@ jobs:
           path: build/report/junit
   report:
     docker:
-      - image: circleci/openjdk:10
+      - image: circleci/openjdk:15-buster
     working_directory: /tmp/workspace
     steps:
       - attach_workspace:
@@ -42,7 +42,7 @@ jobs:
           destination: Allure
   publish:
     docker:
-      - image: circleci/node:10
+      - image: circleci/node:15
     working_directory: /tmp/workspace
     steps:
       - attach_workspace
