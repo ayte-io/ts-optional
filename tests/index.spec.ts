@@ -1,4 +1,4 @@
-import {Optional} from '../src';
+import Optional, {IOptional} from '../src';
 
 const PRESENT: {[index: string]: any} = {
     zero: 0,
@@ -47,12 +47,90 @@ describe('Optional', () => {
         });
     });
 
+    describe('.first()', () => {
+        it('returns empty optional on empty array', () => {
+            expect(Optional.first([]).isPresent()).toBe(false);
+        });
+
+        it('returns first element on non-empty array', () => {
+            expect(Optional.first([1, 2, 3]).get()).toBe(1);
+        });
+
+        it('forbids absent argument', () => {
+            expect(() => Optional.first(null as unknown as [])).toThrowError();
+        });
+    });
+
+    describe('.last()', () => {
+        it('returns empty optional on empty array', () => {
+            expect(Optional.last([]).isPresent()).toBe(false);
+        });
+
+        it('returns last element on non-empty array', () => {
+            expect(Optional.last([1, 2, 3]).get()).toBe(3);
+        });
+
+        it('forbids absent argument', () => {
+            expect(() => Optional.last(null as unknown as [])).toThrowError();
+        });
+    });
+
+    describe('.map()', () => {
+        it('calls transformer on present value', () => {
+            const result = 12;
+            const factory = jest.fn(() => result);
+            expect(Optional.map(15, factory).get()).toBe(result);
+            expect(factory).toHaveBeenCalledTimes(1);
+        });
+
+        it('doesn\'t call transformer on absent value', () => {
+            const transformer = jest.fn();
+            expect(Optional.map(null, transformer).isPresent()).toBe(false);
+            expect(transformer).toHaveBeenCalledTimes(0);
+        });
+
+        it('handles transformer returning null', () => {
+            const transformer = jest.fn(() => null);
+            expect(Optional.map(15, transformer).isPresent()).toBe(false);
+            expect(transformer).toHaveBeenCalledTimes(1);
+        });
+
+        it('forbids empty transformer', () => {
+            expect(() => Optional.map(15, null as unknown as (value: unknown) => any)).toThrowError();
+        });
+    });
+
+    describe('.flatMap()', () => {
+        it('calls transformer on present value', () => {
+            const result = 12;
+            const factory = jest.fn(() => Optional.of(result));
+            expect(Optional.flatMap(15, factory).get()).toBe(result);
+            expect(factory).toHaveBeenCalledTimes(1);
+        });
+
+        it('doesn\'t call transformer on absent value', () => {
+            const transformer = jest.fn(() => Optional.empty());
+            expect(Optional.flatMap(null, transformer).isPresent()).toBe(false);
+            expect(transformer).toHaveBeenCalledTimes(0);
+        });
+
+        it('throws on transformer returning null', () => {
+            const transformer = jest.fn(() => null as unknown as IOptional<number>);
+            expect(() => Optional.flatMap(15, transformer)).toThrowError();
+            expect(transformer).toHaveBeenCalledTimes(1);
+        });
+
+        it('forbids empty transformer', () => {
+            expect(() => Optional.flatMap(15, null as unknown as (value: unknown) => IOptional<number>)).toThrowError();
+        });
+    });
+
     describe('#map()', () => {
         it('runs transformer', () => {
             const value = {};
             const result = {};
             const transformer = jest.fn(() => result);
-            expect(Optional.of(value).map(transformer).orNull()).toBe(result);
+            expect(Optional.of(value).map(transformer).orElseNull()).toBe(result);
             expect(transformer).toBeCalledTimes(1);
             expect(transformer).toBeCalledWith(value);
         });
@@ -66,6 +144,10 @@ describe('Optional', () => {
             expect(Optional.empty().map(transformer).isAbsent()).toBe(true);
             expect(transformer).toBeCalledTimes(0);
         });
+
+        it('forbids empty transformer', () => {
+            expect(() => Optional.of({}).map(null as unknown as () => unknown)).toThrowError();
+        });
     });
 
     describe('#flatMap()', () => {
@@ -73,15 +155,15 @@ describe('Optional', () => {
             const value = {};
             const result = {};
             const transformer = jest.fn(() => Optional.of(result));
-            expect(Optional.of(value).flatMap(transformer).orNull()).toBe(result);
+            expect(Optional.of(value).flatMap(transformer).orElseNull()).toBe(result);
             expect(transformer).toBeCalledTimes(1);
             expect(transformer).toBeCalledWith(value);
         });
 
         it('throws on transformer returning null', () => {
-            const transformer = () => null;
-            // @ts-ignore
+            const transformer = jest.fn(() => null as unknown as IOptional<number>);
             expect(() => Optional.of(2).flatMap(transformer)).toThrow();
+            expect(transformer).toHaveBeenCalledTimes(1);
         });
 
         it('does not run transformer on absent identity', () => {
@@ -89,9 +171,13 @@ describe('Optional', () => {
             expect(Optional.empty().flatMap(transformer).isAbsent()).toBe(true);
             expect(transformer).toBeCalledTimes(0);
         });
+
+        it('forbids empty transformer', () => {
+            expect(() => Optional.of({}).flatMap(null as unknown as () => IOptional<unknown>)).toThrowError();
+        });
     });
 
-    describe('#filter', () => {
+    describe('#filter()', () => {
         it('returns self if predicate passes', () => {
             const value = {};
             const predicate = jest.fn(() => true);
@@ -112,6 +198,91 @@ describe('Optional', () => {
             const predicate = jest.fn(() => true);
             expect(Optional.empty().filter(predicate).isAbsent()).toBe(true);
             expect(predicate).toBeCalledTimes(0);
+        });
+
+        it('forbids empty predicate', () => {
+            expect(() => Optional.of({}).filter(null as unknown as () => boolean)).toThrowError();
+        });
+    });
+
+    describe('#satisfies()', () => {
+        it('returns false on missing identity', () => {
+            const predicate = jest.fn(() => true);
+            expect(Optional.empty().satisfies(predicate)).toBe(false);
+            expect(predicate).toHaveBeenCalledTimes(0);
+        });
+
+        it('returns false on present identity if predicate returns false', () => {
+            const predicate = jest.fn(() => false);
+            expect(Optional.of(3).satisfies(predicate)).toBe(false);
+            expect(predicate).toHaveBeenCalledTimes(1);
+        });
+
+        it('returns true on present identity if predicate returns true', () => {
+            const predicate = jest.fn(() => true);
+            expect(Optional.of(3).satisfies(predicate)).toBe(true);
+            expect(predicate).toHaveBeenCalledTimes(1);
+        });
+
+        it('forbids empty predicate', () => {
+            expect(() => Optional.of({}).satisfies(null as unknown as () => boolean)).toThrowError();
+        });
+    });
+
+    describe('#dissatisfies()', () => {
+        it('returns false on missing identity', () => {
+            const predicate = jest.fn(() => true);
+            expect(Optional.empty().dissatisfies(predicate)).toBe(false);
+            expect(predicate).toHaveBeenCalledTimes(0);
+        });
+
+        it('returns false on present identity if predicate returns true', () => {
+            const predicate = jest.fn(() => true);
+            expect(Optional.of(3).dissatisfies(predicate)).toBe(false);
+            expect(predicate).toHaveBeenCalledTimes(1);
+        });
+
+        it('returns true on present identity if predicate returns false', () => {
+            const predicate = jest.fn(() => false);
+            expect(Optional.of(3).dissatisfies(predicate)).toBe(true);
+            expect(predicate).toHaveBeenCalledTimes(1);
+        });
+
+        it('forbids empty predicate', () => {
+            expect(() => Optional.of({}).dissatisfies(null as unknown as () => boolean)).toThrowError();
+        });
+    });
+
+    describe('#contains()', () => {
+        it('returns false on empty optional', () => {
+            expect(Optional.empty().contains(12)).toBe(false);
+
+            const comparator = jest.fn(() => true);
+
+            expect(Optional.empty().contains(12, comparator)).toBe(false);
+            expect(comparator).toHaveBeenCalledTimes(0);
+        });
+
+        it('returns true if comparator is not passed and regular equality check passes', () => {
+            expect(Optional.of(12).contains(12)).toBe(true);
+        });
+
+        it('returns false if comparator is not passed and regular equality check fails', () => {
+            expect(Optional.of(12).contains(13)).toBe(false);
+        });
+
+        it('returns true if provided comparator returns true against identity', () => {
+            const comparator = jest.fn(() => true);
+
+            expect(Optional.of(12).contains(13, comparator)).toBe(true);
+            expect(comparator).toHaveBeenCalledTimes(1);
+        });
+
+        it('returns true if provided comparator returns false against identity', () => {
+            const comparator = jest.fn(() => false);
+
+            expect(Optional.of(12).contains(12, comparator)).toBe(false);
+            expect(comparator).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -140,20 +311,37 @@ describe('Optional', () => {
         });
     });
 
-    describe('#orElseGet()', () => {
+    describe('#orElseSupply()', () => {
         it('calls supplier on missing identity', () => {
             const value = {};
             const supplier = jest.fn(() => value);
-            expect(Optional.empty().orElseGet(supplier)).toBe(value);
+            expect(Optional.empty().orElseSupply(supplier)).toBe(value);
             expect(supplier).toBeCalledTimes(1);
+        });
+
+        it('returns null if supplier returned nullable value', () => {
+            const supplier = jest.fn(() => undefined);
+            expect(Optional.empty().orElseSupply(supplier)).toBeNull();
+            expect(supplier).toBeCalledTimes(1);
+        });
+
+        it('doesn\'t call supplier on present identity', () => {
+            const value = 12;
+            const supplier = jest.fn(() => 13);
+            expect(Optional.of(value).orElseSupply(supplier)).toBe(value);
+            expect(supplier).toBeCalledTimes(0);
         });
 
         Object.keys(PRESENT).forEach(key => {
             it(`returns present identity (${key})`, () => {
                 const supplier = jest.fn(() => {});
-                expect(Optional.of(PRESENT[key]).orElseGet(supplier)).toBe(PRESENT[key]);
+                expect(Optional.of(PRESENT[key]).orElseSupply(supplier)).toBe(PRESENT[key]);
                 expect(supplier).toBeCalledTimes(0);
             });
+        });
+
+        it('forbids empty supplier', () => {
+            expect(() => Optional.of({}).orElseSupply(null as unknown as () => {})).toThrowError();
         });
     });
 
@@ -165,6 +353,7 @@ describe('Optional', () => {
             expect(supplier).toBeCalledTimes(1);
         });
 
+        // noinspection DuplicatedCode
         Object.keys(PRESENT).forEach(key => {
             it(`returns present identity (${key})`, () => {
                 const supplier = jest.fn(() => new Error());
@@ -172,35 +361,24 @@ describe('Optional', () => {
                 expect(supplier).toBeCalledTimes(0);
             });
         });
+
+        it('forbids empty supplier', () => {
+            expect(() => Optional.of({}).orElseThrow(null as unknown as () => Error)).toThrowError();
+        });
     });
 
-    describe('#orNull()', () => {
+    describe('#orElseNull()', () => {
         it('returns null on missing identity', () => {
-            expect(Optional.empty().orNull()).toBeNull();
+            expect(Optional.empty().orElseNull()).toBeNull();
         });
 
+        // noinspection DuplicatedCode
         Object.keys(PRESENT).forEach(key => {
             it(`returns present identity (${key})`, () => {
                 const supplier = jest.fn(() => new Error());
                 expect(Optional.of(PRESENT[key]).orElseThrow(supplier)).toBe(PRESENT[key]);
                 expect(supplier).toBeCalledTimes(0);
             });
-        });
-    });
-
-    describe('#or()', () => {
-        it('calls provided supplier on missing identity', () => {
-            const replacement = Optional.of(2);
-            const supplier = jest.fn(() => replacement);
-            expect(Optional.empty().or(supplier)).toBe(replacement);
-            expect(supplier).toBeCalledTimes(1);
-        });
-
-        it('does not call supplier and returns self on present identity', () => {
-            const supplier = jest.fn(() => Optional.empty());
-            const optional = Optional.of(2);
-            expect(optional.or(supplier)).toBe(optional);
-            expect(supplier).toBeCalledTimes(0);
         });
     });
 
@@ -213,6 +391,35 @@ describe('Optional', () => {
         it('returns this on present identity', () => {
             const optional = Optional.of(2);
             expect(optional.fallback(Optional.of(3))).toBe(optional);
+        });
+
+        it('forbids empty fallback', () => {
+            expect(() => Optional.of({}).fallback(null as unknown as IOptional<{}>)).toThrowError();
+        });
+    });
+    
+    describe('#supplyFallback()', () => {
+        it('calls provided factory on absent identity', () => {
+            const fallback = Optional.of(13);
+            const factory = jest.fn(() => fallback);
+            expect(Optional.empty().supplyFallback(factory)).toBe(fallback);
+            expect(factory).toHaveBeenCalledTimes(1);
+        });
+
+        it('throws on provided factory returning absent value', () => {
+            const factory = jest.fn(() => null as unknown as IOptional<unknown>);
+            expect(() => Optional.empty().supplyFallback(factory)).toThrowError();
+            expect(factory).toHaveBeenCalledTimes(1);
+        });
+
+        it('returns self on present identity', () => {
+            const factory = jest.fn(() => Optional.empty<number>());
+            const optional: IOptional<number> = Optional.of(12);
+            expect(optional.supplyFallback(factory)).toBe(optional);
+            expect(factory).toHaveBeenCalledTimes(0);
+        });
+        it('forbids empty factory', () => {
+            expect(() => Optional.of({}).supplyFallback(null as unknown as () => IOptional<{}>)).toThrowError();
         });
     });
 
@@ -231,6 +438,10 @@ describe('Optional', () => {
             Optional.empty().ifPresent(consumer);
             expect(consumer).toBeCalledTimes(0);
         });
+
+        it('forbids empty consumer', () => {
+            expect(() => Optional.of({}).ifPresent(null as unknown as () => void)).toThrowError();
+        });
     });
 
     describe('#ifAbsent()', () => {
@@ -244,6 +455,10 @@ describe('Optional', () => {
             const unit = jest.fn();
             Optional.of({}).ifAbsent(unit);
             expect(unit).toBeCalledTimes(0);
+        });
+
+        it('forbids empty action', () => {
+            expect(() => Optional.empty().ifAbsent(null as unknown as () => void)).toThrowError();
         });
     });
 
@@ -265,16 +480,28 @@ describe('Optional', () => {
             expect(consumer).toBeCalledTimes(0);
             expect(unit).toBeCalledTimes(1);
         });
+
+        it('forbids empty consumer', () => {
+            expect(() => Optional.of({}).peek(null as unknown as () => void, () => {})).toThrowError();
+        });
+
+        it('forbids empty action', () => {
+            expect(() => Optional.of({}).peek(() => {}, null as unknown as () => void)).toThrowError();
+        });
     });
 
     describe('#equals()', () => {
         it('returns true on two empty optionals', () => {
             // @ts-ignore
-            expect(new Optional(null).equals(new Optional(null))).toBe(true);
+            expect(Optional.empty().equals(Optional.empty())).toBe(true);
         });
 
         it('returns false on charged optional against empty optional', () => {
             expect(Optional.of(2).equals(Optional.empty())).toBe(false);
+        });
+
+        it('returns false on empty optional against charged optional', () => {
+            expect(Optional.empty().equals(Optional.of(2))).toBe(false);
         });
 
         it('returns true on two optionals with same identity', () => {
@@ -296,7 +523,7 @@ describe('Optional', () => {
         });
 
         it('hints about missing identity', () => {
-            expect(Optional.empty().toString()).toBe('Optional {}');
+            expect(Optional.empty().toString()).toBe('Optional {empty}');
         });
     });
 });

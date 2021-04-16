@@ -22,7 +22,7 @@ undefined checking every time you need to perform an operation.
 To create an Optional, you need to call one of static methods:
 
 ```javascript
-import {Optional} from '@ayte/optional';
+import Optional from '@ayte/optional';
 
 // will eat anything you provide
 const unknown = Optional.ofNullable(dunnoIfPresent);
@@ -89,7 +89,7 @@ const ensured = optional.orElseThrow(() => new Error('Assertion failed'));
 ```
 
 To inspect current state, you can use `.isPresent() / .isAbsent()` 
-methods. Also there are conditional methods for producing side effects:
+methods. Also, there are conditional methods for producing side effects:
 
 ```javascript
 const optional = Optional.empty();
@@ -102,7 +102,16 @@ Optional.empty()
 All those methods return current optional, which allows chaining as 
 above.
 
-That's pretty much it.
+There are also some utility methods which may help you:
+
+```typescript
+const alpha: IOptional<number> = Optional.map(12, x => x * 2);
+const beta: IOptional<number> = Optional.flatMap(13, x => Optional.of(12).map(y => x + y));
+const gamma: IOptional<number> = Optional.first([12, 13, 14]);
+const delta: IOptional<number> = Optional.last([12, 13, 14]);
+const exists = Optional.isPresent(null);
+const absent = Optional.isAbsent(12);
+```
 
 ## TypeScript Typings
 
@@ -110,15 +119,19 @@ Baked in, as well as source map.
 
 ## Contribution
 
-Send your PRs to **dev** branch.
+Send your PRs to **release/0.2** branch.
 
-## Dev branch state
+## Other
 
-[![CircleCI/Dev](https://img.shields.io/circleci/project/github/ayte-io/ts-optional/dev.svg?style=flat-square)](https://circleci.com/gh/ayte-io/ts-optional/tree/dev)
-[![Coveralls/Dev](https://img.shields.io/coveralls/github/ayte-io/ts-optional/dev.svg?style=flat-square)](https://coveralls.io/github/ayte-io/ts-optional?branch=dev)
+You may also be interested in [@ayte/nullables]() package that does 
+similar job without unnecessary wrapping (`isPresent(x)` instead of
+`Optional.ofNullable(x).isPresent()`).
 
 ## Licensing
 
-MIT / Ayte Labs, 2018
+MIT & UPL-1.0 / Ayte Labs, 2018
+
+UPL-1.0 states 2021 since it was added later and this would be not 
+exactly legal to back-date it.
 
 Promise to have fun using it.
